@@ -3,35 +3,11 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/deadsy/libusb"
-	_ "github.com/thoj/go-ircevent"
+	"github.com/thoj/go-ircevent"
 	"log"
 	"os"
-	"time"
+	"strings"
 )
-
-const USBRQ_HID_SET_REPORT = 0x09
-const USB_HID_REPORT_TYPE_FEATURE = 0x03
-
-type ep_info struct {
-	itf int
-	ep  *libusb.Endpoint_Descriptor
-}
-
-func printUSBInfo(handle libusb.Device_Handle) {
-	dev := libusb.Get_Device(handle)
-	path := make([]byte, 8)
-	path, err := libusb.Get_Port_Numbers(dev, path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	dd, err := libusb.Get_Device_Descriptor(dev)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Bus %03d Device %03d: ID %04x:%04x\n", libusb.Get_Bus_Number(dev), libusb.Get_Device_Address(dev), dd.IdVendor, dd.IdProduct)
-	fmt.Printf("%v %d\n", path, libusb.Get_Port_Number(dev))
-}
 
 func codeToBytes(code int) []byte {
 	bs := make([]byte, 4)
@@ -40,53 +16,55 @@ func codeToBytes(code int) []byte {
 	return bs
 }
 
-func writeCode(handle libusb.Device_Handle, code int) {
-	sendByte(handle, 0x73)
-	sendByte(handle, 0x10)
+func writeCode(code int) {
 	bs := codeToBytes(code)
-	for i := range bs {
-		if i != 0 {
-			sendByte(handle, bs[i])
-		}
+	fmt.Printf("Sending %v\n", bs)
+	fi, err := os.OpenFile("/dev/ttyACM0", os.O_WRONLY, os.ModeDevice)
+	if err != nil {
+		panic(err)
 	}
-	sendByte(handle, 0xa)
+	_, err2 := fi.Write(bs)
+	if err2 != nil {
+		panic(err2)
+	}
+	fi.Sync()
+	fi.Close()
 }
 
-func sendByte(handle libusb.Device_Handle, thebyte byte) {
-	fmt.Printf("Sending %v\n", thebyte)
-	timeout := uint(6000)
-	request_type := uint8(0x20)
-	request := uint8(0x09)
-	wvalue := uint16(0x300)
-	windex := uint16(thebyte)
-	//data := []byte{thebyte}
-	//fmt.Printf("Sending index %#x\n", data)
-	data := []byte{0}
-	bytes, err := libusb.Control_Transfer(handle, request_type, request, wvalue, windex, data, timeout)
-	fmt.Printf("Err: %v\n", err)
-	fmt.Printf("Sent bytes %v\n", bytes)
+type Bot struct {
+	Name   string
+	Room   string
+	Server string
+	Port   int
+	Con    *irc.Connection
+}
+
+func (bot *Bot) Address() string {
+	return fmt.Sprintf("%s:%d", bot.Server, bot.Port)
+}
+
+func (bot *Bot) Run() {
+	bot.Con = irc.IRC(bot.Name, bot.Name)
+	err := bot.Con.Connect(bot.Address())
+	if err != nil {
+		log.Fatal("Couldn't connect to %s: %s", bot.Address, err)
+	}
+	bot.Con.AddCallback("001", func(e *irc.Event) {
+		bot.Con.Join(bot.Room)
+	})
+	bot.Con.AddCallback("PRIVMSG", func(e *irc.Event) {
+		msg := e.Arguments[1]
+		content_reply := fmt.Sprintf("Content: %v", msg)
+		reply := fmt.Sprintf("%+v", e)
+		log.Print(reply)
+		if strings.HasPrefix(msg, bot.Name) {
+			bot.Con.Privmsg("#test", content_reply)
+		}
+	})
+	bot.Con.Loop()
 }
 
 func main() {
-	var ctx libusb.Context
-	err := libusb.Init(&ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer libusb.Exit(ctx)
-
-	vid := uint16(0x16c0)
-	pid := uint16(0x05df)
-	fmt.Printf("Opening device %04X:%04X...\n", vid, pid)
-	handle := libusb.Open_Device_With_VID_PID(nil, vid, pid)
-	if handle == nil {
-		fmt.Fprintf(os.Stderr, "  Failed.\n")
-		return
-	}
-	defer libusb.Close(handle)
-	printUSBInfo(handle)
-	writeCode(handle, 95500)
-	time.Sleep(time.Duration(1) * time.Second)
-	//	fmt.Printf(" Done. Next!\n")
-	writeCode(handle, 95491)
+	bot := Bot{Name: "powerbot", Room: "#test", Server: "archive.local", Port: 6667}
+	bot.Run()
 }
