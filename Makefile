@@ -6,3 +6,6 @@ powerbot: powerbot.go
 
 clean:
 	rm -f powerbot
+
+test:
+	go test -v

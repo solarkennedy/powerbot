@@ -6,6 +6,7 @@ import (
 	"github.com/thoj/go-ircevent"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -16,10 +17,10 @@ func codeToBytes(code int) []byte {
 	return bs
 }
 
-func writeCode(code int, serialport string) {
+func (bot *Bot) WriteCode(code int) {
 	bs := codeToBytes(code)
 	fmt.Printf("Sending %v\n", bs)
-	fi, err := os.OpenFile("/dev/ttyACM0", os.O_WRONLY, os.ModeDevice)
+	fi, err := os.OpenFile(bot.SerialPort, os.O_WRONLY, os.ModeDevice)
 	if err != nil {
 		panic(err)
 	}
@@ -44,8 +45,32 @@ func (bot *Bot) Address() string {
 	return fmt.Sprintf("%s:%d", bot.Server, bot.Port)
 }
 
-func (bot *Bot) ParseAndReply(channel string, msg string) {
-	bot.Con.Privmsg(channel, msg)
+func ExtractCommandAndArgument(msg string) (command string, argument string) {
+	command = "code"
+	argument = "95500"
+	return
+}
+
+func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
+	command, argument := ExtractCommandAndArgument(msg)
+	if command == "code" {
+		code, err := strconv.Atoi(argument)
+		if err == nil {
+			reply := fmt.Sprintf("Sent out code %v", code)
+			bot.WriteCode(code)
+			bot.Con.Privmsg(channel, reply)
+			return
+		} else {
+			reply := fmt.Sprintf("%v doesn't look like a valid code", argument)
+			bot.Con.Privmsg(channel, reply)
+			return
+		}
+	} else {
+		bot.Con.Privmsg(user, fmt.Sprintf("%v is not a valid command", command))
+		bot.Con.Privmsg(user, "Try something like:")
+		bot.Con.Privmsg(user, "powerbot code 1234")
+		return
+	}
 }
 
 func (bot *Bot) Run() {
@@ -61,7 +86,7 @@ func (bot *Bot) Run() {
 		channel := e.Arguments[0]
 		msg := e.Arguments[1]
 		if strings.HasPrefix(msg, bot.Name) {
-			bot.ParseAndReply(channel, msg)
+			bot.ParseAndReply(channel, msg, e.Nick)
 		}
 	})
 	bot.Con.Loop()
