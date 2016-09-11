@@ -16,7 +16,7 @@ func codeToBytes(code int) []byte {
 	return bs
 }
 
-func writeCode(code int) {
+func writeCode(code int, serialport string) {
 	bs := codeToBytes(code)
 	fmt.Printf("Sending %v\n", bs)
 	fi, err := os.OpenFile("/dev/ttyACM0", os.O_WRONLY, os.ModeDevice)
@@ -32,15 +32,20 @@ func writeCode(code int) {
 }
 
 type Bot struct {
-	Name   string
-	Room   string
-	Server string
-	Port   int
-	Con    *irc.Connection
+	Name       string
+	Room       string
+	Server     string
+	Port       int
+	Con        *irc.Connection
+	SerialPort string
 }
 
 func (bot *Bot) Address() string {
 	return fmt.Sprintf("%s:%d", bot.Server, bot.Port)
+}
+
+func (bot *Bot) ParseAndReply(channel string, msg string) {
+	bot.Con.Privmsg(channel, msg)
 }
 
 func (bot *Bot) Run() {
@@ -53,18 +58,18 @@ func (bot *Bot) Run() {
 		bot.Con.Join(bot.Room)
 	})
 	bot.Con.AddCallback("PRIVMSG", func(e *irc.Event) {
+		channel := e.Arguments[0]
 		msg := e.Arguments[1]
-		content_reply := fmt.Sprintf("Content: %v", msg)
-		reply := fmt.Sprintf("%+v", e)
-		log.Print(reply)
 		if strings.HasPrefix(msg, bot.Name) {
-			bot.Con.Privmsg("#test", content_reply)
+			bot.ParseAndReply(channel, msg)
 		}
 	})
 	bot.Con.Loop()
 }
 
 func main() {
-	bot := Bot{Name: "powerbot", Room: "#test", Server: "archive.local", Port: 6667}
+	bot := Bot{
+		Name: "powerbot", Room: "#test", Server: "archive.local", Port: 6667,
+		SerialPort: "/dev/ttyACM0"}
 	bot.Run()
 }
