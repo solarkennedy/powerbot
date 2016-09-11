@@ -6,6 +6,7 @@ import (
 	"github.com/thoj/go-ircevent"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -45,14 +46,22 @@ func (bot *Bot) Address() string {
 	return fmt.Sprintf("%s:%d", bot.Server, bot.Port)
 }
 
-func ExtractCommandAndArgument(msg string) (command string, argument string) {
-	command = "code"
-	argument = "95500"
+func ExtractCommandAndArgument(msg string, name string) (command string, argument string) {
+	regex := fmt.Sprintf(`^%s[:]?.* (\w+) (\w+)`, name)
+	command_regexp := regexp.MustCompile(regex)
+	matches := command_regexp.FindStringSubmatch(msg)
+	if len(matches) != 3 {
+		command = "unknown"
+		argument = "unknown"
+	} else {
+		command = matches[1]
+		argument = matches[2]
+	}
 	return
 }
 
 func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
-	command, argument := ExtractCommandAndArgument(msg)
+	command, argument := ExtractCommandAndArgument(msg, bot.Name)
 	if command == "code" {
 		code, err := strconv.Atoi(argument)
 		if err == nil {
