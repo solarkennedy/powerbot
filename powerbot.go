@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/thoj/go-ircevent"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -35,11 +37,12 @@ func (bot *Bot) WriteCode(code int) {
 
 type Bot struct {
 	Name       string
-	Room       string
+	Channels   []string
 	Server     string
 	Port       int
 	Con        *irc.Connection
 	SerialPort string
+	Commands   map[string]int
 }
 
 func (bot *Bot) Address() string {
@@ -88,9 +91,11 @@ func (bot *Bot) Run() {
 	if err != nil {
 		log.Fatal("Couldn't connect to %s: %s", bot.Address, err)
 	}
-	bot.Con.AddCallback("001", func(e *irc.Event) {
-		bot.Con.Join(bot.Room)
-	})
+	for _, channel := range bot.Channels {
+		bot.Con.AddCallback("001", func(e *irc.Event) {
+			bot.Con.Join(channel)
+		})
+	}
 	bot.Con.AddCallback("PRIVMSG", func(e *irc.Event) {
 		channel := e.Arguments[0]
 		msg := e.Arguments[1]
@@ -102,8 +107,18 @@ func (bot *Bot) Run() {
 }
 
 func main() {
+
+	filename := "powerbot.yaml"
+	data, _ := ioutil.ReadFile(filename)
+	m := make(map[interface{}]interface{})
+	err := yaml.Unmarshal([]byte(data), &m)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
+	channels := []string{"#test"}
 	bot := Bot{
-		Name: "powerbot", Room: "#test", Server: "archive.local", Port: 6667,
+		Name: "powerbot", Channels: channels, Server: "archive.local", Port: 6667,
 		SerialPort: "/dev/ttyACM0"}
 	bot.Run()
 }

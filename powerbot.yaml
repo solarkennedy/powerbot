@@ -1,0 +1,15 @@
+---
+serial_port: '/dev/ttyACM0'
+
+irc_server:
+  hostname: "archive.local"
+  port: 6667
+  ssl: false
+
+nick: powerbot_example
+channels:
+ - #test
+
+commands:
+  "christmas on": 95491
+  "christmas off": 95500
