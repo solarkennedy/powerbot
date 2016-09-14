@@ -106,19 +106,35 @@ func (bot *Bot) Run() {
 	bot.Con.Loop()
 }
 
+type IrcConfig struct {
+	Hostname string `yaml:"hostname"`
+	Port     int    `yaml:"port"`
+	SSL      bool   `yaml:"ssl"`
+}
+
+type Config struct {
+	SerialPort string         `yaml:"serial_port"`
+	IrcServer  IrcConfig      `yaml:"irc_server`
+	Nick       string         `yaml:"nick"`
+	Channels   []string       `yaml:"channels"`
+	Commands   map[string]int `yaml:"commands"`
+}
+
 func main() {
 
 	filename := "powerbot.yaml"
 	data, _ := ioutil.ReadFile(filename)
-	m := make(map[interface{}]interface{})
-	err := yaml.Unmarshal([]byte(data), &m)
+	config := Config{}
+	err := yaml.Unmarshal([]byte(data), &config)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
 
-	channels := []string{"#test"}
 	bot := Bot{
-		Name: "powerbot", Channels: channels, Server: "archive.local", Port: 6667,
-		SerialPort: "/dev/ttyACM0"}
+		Name:       config.Nick,
+		Channels:   config.Channels,
+		Server:     config.IrcServer.Hostname,
+		Port:       config.IrcServer.Port,
+		SerialPort: config.SerialPort}
 	bot.Run()
 }

@@ -8,7 +8,8 @@ irc_server:
 
 nick: powerbot_example
 channels:
- - #test
+ - "#test"
+ - "#test2"
 
 commands:
   "christmas on": 95491
