@@ -89,9 +89,12 @@ func (bot *Bot) Run() {
 	bot.Con = irc.IRC(bot.Name, bot.Name)
 	err := bot.Con.Connect(bot.Address())
 	if err != nil {
-		log.Fatal("Couldn't connect to %s: %s", bot.Address, err)
+		log.Fatal("Couldn't connect to %s: %s", bot.Address(), err)
 	}
+	bot.Con.Nick(bot.Name)
+	log.Printf("Connected to %v as %v", bot.Address(), bot.Name)
 	for _, channel := range bot.Channels {
+		log.Printf("Joining %v", channel)
 		bot.Con.AddCallback("001", func(e *irc.Event) {
 			bot.Con.Join(channel)
 		})
