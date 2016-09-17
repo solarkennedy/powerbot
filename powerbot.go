@@ -38,15 +38,14 @@ func (bot *Bot) WriteCode(code int) {
 type Bot struct {
 	Name       string
 	Channels   []string
-	Server     string
-	Port       int
+	IrcConfig  IrcServerConfig
 	Con        *irc.Connection
 	SerialPort string
 	Commands   map[string]int
 }
 
 func (bot *Bot) Address() string {
-	return fmt.Sprintf("%s:%d", bot.Server, bot.Port)
+	return fmt.Sprintf("%s:%d", bot.IrcConfig.Hostname, bot.IrcConfig.Port)
 }
 
 func ExtractCommandAndArgument(msg string, name string) (command string, argument string) {
@@ -87,6 +86,10 @@ func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
 
 func (bot *Bot) Run() {
 	bot.Con = irc.IRC(bot.Name, bot.Name)
+	bot.Con.UseTLS = bot.IrcConfig.SSL
+	bot.Con.Password = bot.IrcConfig.Password
+	bot.Con.VerboseCallbackHandler = true
+	bot.Con.Debug = true
 	err := bot.Con.Connect(bot.Address())
 	if err != nil {
 		log.Fatal("Couldn't connect to %s: %s", bot.Address(), err)
@@ -109,22 +112,23 @@ func (bot *Bot) Run() {
 	bot.Con.Loop()
 }
 
-type IrcConfig struct {
+type IrcServerConfig struct {
 	Hostname string `yaml:"hostname"`
+	Password string `yaml:"password"`
 	Port     int    `yaml:"port"`
 	SSL      bool   `yaml:"ssl"`
 }
 
-func (c *IrcConfig) UnmarshalYAML(b []byte) error {
+func (c *IrcServerConfig) UnmarshalYAML(b []byte) error {
 	return yaml.Unmarshal(b, c)
 }
 
 type Config struct {
-	SerialPort string         `yaml:"serial_port"`
-	IrcServer  IrcConfig      `yaml:"ircserver"`
-	Nick       string         `yaml:"nick"`
-	Channels   []string       `yaml:"channels"`
-	Commands   map[string]int `yaml:"commands"`
+	SerialPort string          `yaml:"serial_port"`
+	IrcServer  IrcServerConfig `yaml:"ircserver"`
+	Nick       string          `yaml:"nick"`
+	Channels   []string        `yaml:"channels"`
+	Commands   map[string]int  `yaml:"commands"`
 }
 
 func (c *Config) Parse(data []byte) error {
@@ -149,11 +153,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
+	fmt.Printf("%+v", config)
 	bot := Bot{
 		Name:       config.Nick,
 		Channels:   config.Channels,
-		Server:     config.IrcServer.Hostname,
-		Port:       config.IrcServer.Port,
+		IrcConfig:  config.IrcServer,
 		SerialPort: config.SerialPort}
 	bot.Run()
 }

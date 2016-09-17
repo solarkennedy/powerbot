@@ -5,8 +5,9 @@ ircserver:
   hostname: "archive.local"
   port: 6667
   ssl: false
+  password: 'foo'
 
-nick: powerbot_example
+nick: powerbot
 channels:
  - "#test"
  - "#test2"
