@@ -22,7 +22,7 @@ func codeToBytes(code int) []byte {
 
 func (bot *Bot) WriteCode(code int) error {
 	bs := codeToBytes(code)
-	fmt.Printf("Sending %v\n", bs)
+	fmt.Printf("Sending %v to %s\n", bs, bot.SerialPort)
 	fi, err := os.OpenFile(bot.SerialPort, os.O_WRONLY, os.ModeDevice)
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func (c *IrcServerConfig) UnmarshalYAML(b []byte) error {
 }
 
 type Config struct {
-	SerialPort string          `yaml:"serial_port"`
+	SerialPort string          `yaml:"serialport"`
 	IrcServer  IrcServerConfig `yaml:"ircserver"`
 	Nick       string          `yaml:"nick"`
 	Channels   []string        `yaml:"channels"`
