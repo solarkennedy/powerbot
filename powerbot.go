@@ -82,12 +82,33 @@ func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
 			bot.Con.Privmsg(channel, reply)
 			return
 		}
+	} else if code, ok := bot.Commands[command+" "+argument]; ok {
+		write_err := bot.WriteCode(code)
+		var reply string
+		if write_err == nil {
+			reply = fmt.Sprintf("Sent out code %v for %v", code, command)
+		} else {
+			reply = fmt.Sprintf("Error writing to device: %v", write_err)
+		}
+		bot.Con.Privmsg(channel, reply)
+		return
 	} else {
-		bot.Con.Privmsg(user, fmt.Sprintf("%v is not a valid command", command))
-		bot.Con.Privmsg(user, "Try something like:")
-		bot.Con.Privmsg(user, "powerbot code 1234")
+		bot.Con.Privmsg(user, fmt.Sprintf("'%v %v' is not a valid command", command, argument))
+		bot.Con.Privmsg(user, "To send raw codes:")
+		bot.Con.Privmsg(user, "    powerbot code 1234")
+		bot.Con.Privmsg(user, "Or one of the configured commands:")
+		all_commands := fmt.Sprintf("    %v", bot.ListCommands())
+		bot.Con.Privmsg(user, all_commands)
 		return
 	}
+}
+
+func (bot *Bot) ListCommands() []string {
+	keys := make([]string, 0, len(bot.Commands))
+	for k, _ := range bot.Commands {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func (bot *Bot) Run() {
@@ -164,6 +185,7 @@ func main() {
 		Name:       config.Nick,
 		Channels:   config.Channels,
 		IrcConfig:  config.IrcServer,
-		SerialPort: config.SerialPort}
+		SerialPort: config.SerialPort,
+		Commands:   config.Commands}
 	bot.Run()
 }
