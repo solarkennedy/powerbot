@@ -20,19 +20,20 @@ func codeToBytes(code int) []byte {
 	return bs
 }
 
-func (bot *Bot) WriteCode(code int) {
+func (bot *Bot) WriteCode(code int) error {
 	bs := codeToBytes(code)
 	fmt.Printf("Sending %v\n", bs)
 	fi, err := os.OpenFile(bot.SerialPort, os.O_WRONLY, os.ModeDevice)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	_, err2 := fi.Write(bs)
 	if err2 != nil {
-		panic(err2)
+		return err2
 	}
 	fi.Sync()
 	fi.Close()
+	return nil
 }
 
 type Bot struct {
@@ -67,8 +68,13 @@ func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
 	if command == "code" {
 		code, err := strconv.Atoi(argument)
 		if err == nil {
-			reply := fmt.Sprintf("Sent out code %v", code)
-			bot.WriteCode(code)
+			write_err := bot.WriteCode(code)
+			var reply string
+			if write_err == nil {
+				reply = fmt.Sprintf("Sent out code %v", code)
+			} else {
+				reply = fmt.Sprintf("Error writing to device: %v", write_err)
+			}
 			bot.Con.Privmsg(channel, reply)
 			return
 		} else {
