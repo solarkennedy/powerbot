@@ -1,7 +1,7 @@
 ---
 serial_port: '/dev/ttyACM0'
 
-irc_server:
+ircserver:
   hostname: "archive.local"
   port: 6667
   ssl: false

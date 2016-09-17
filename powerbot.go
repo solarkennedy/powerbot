@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/ghodss/yaml"
 	"github.com/thoj/go-ircevent"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -112,24 +112,40 @@ type IrcConfig struct {
 	SSL      bool   `yaml:"ssl"`
 }
 
+func (c *IrcConfig) UnmarshalYAML(b []byte) error {
+	return yaml.Unmarshal(b, c)
+}
+
 type Config struct {
 	SerialPort string         `yaml:"serial_port"`
-	IrcServer  IrcConfig      `yaml:"irc_server`
+	IrcServer  IrcConfig      `yaml:"ircserver"`
 	Nick       string         `yaml:"nick"`
 	Channels   []string       `yaml:"channels"`
 	Commands   map[string]int `yaml:"commands"`
 }
 
-func main() {
+func (c *Config) Parse(data []byte) error {
+	err := yaml.Unmarshal([]byte(data), c)
+	if err != nil {
+		return err
+	}
+	if c.IrcServer.Hostname == "" {
+		log.Fatalf("error: ircserver hostname not set")
+	}
+	return nil
+}
 
+func main() {
 	filename := "powerbot.yaml"
-	data, _ := ioutil.ReadFile(filename)
-	config := Config{}
-	err := yaml.Unmarshal([]byte(data), &config)
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-
+	var config Config
+	err = config.Parse(data)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
 	bot := Bot{
 		Name:       config.Nick,
 		Channels:   config.Channels,
