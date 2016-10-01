@@ -31,8 +31,6 @@ func (bot *Bot) WriteCode(code int) error {
 	if err2 != nil {
 		return err2
 	}
-	fi.Sync()
-	fi.Close()
 	return nil
 }
 
