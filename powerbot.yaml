@@ -2,7 +2,7 @@
 serialport: '/dev/ttyACM0'
 
 ircserver:
-  hostname: "archive.local"
+  hostname: "localhost"
   port: 6667
   ssl: false
   password: 'foo'
@@ -13,5 +13,5 @@ channels:
  - "#test2"
 
 commands:
-  "christmas on": 95491
-  "christmas off": 95500
+  "christmas on": 5330371
+  "christmas off": 5330380

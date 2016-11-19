@@ -1,5 +1,7 @@
 go: powerbot powerbot-cli
-	./powerbot-cli
+	./powerbot-cli 5330371
+	sleep 2s
+	./powerbot-cli 5330380
 	./powerbot
 
 powerbot: powerbot.go cmd/powerbot/powerbot.go

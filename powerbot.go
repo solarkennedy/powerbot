@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func codeToBytes(code int) []byte {
@@ -26,10 +27,13 @@ func (bot *Bot) WriteCode(code int) error {
 	if err != nil {
 		return err
 	}
+	time.Sleep(500 * time.Millisecond)
 	_, err2 := fi.Write(bs)
 	if err2 != nil {
 		return err2
 	}
+	time.Sleep(500 * time.Millisecond)
+	fi.Close()
 	return nil
 }
 
