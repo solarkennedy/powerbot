@@ -1,11 +1,10 @@
-package main
+package powerbot
 
 import (
 	"encoding/binary"
 	"fmt"
 	"github.com/ghodss/yaml"
 	"github.com/thoj/go-ircevent"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -165,25 +164,4 @@ func (c *Config) Parse(data []byte) error {
 		log.Fatalf("error: ircserver hostname not set")
 	}
 	return nil
-}
-
-func main() {
-	filename := "powerbot.yaml"
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	var config Config
-	err = config.Parse(data)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	fmt.Printf("%+v", config)
-	bot := Bot{
-		Name:       config.Nick,
-		Channels:   config.Channels,
-		IrcConfig:  config.IrcServer,
-		SerialPort: config.SerialPort,
-		Commands:   config.Commands}
-	bot.Run()
 }
