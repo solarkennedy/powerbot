@@ -1,49 +1,32 @@
 package powerbot
 
 import (
-	"encoding/binary"
 	"fmt"
 	"github.com/ghodss/yaml"
 	"github.com/thoj/go-ircevent"
 	"log"
-	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func codeToBytes(code int) []byte {
-	bs := make([]byte, 4)
-	binary.LittleEndian.PutUint32(bs, uint32(code))
-	fmt.Printf("DEBUG: code: %v, bytes: %v\n", code, bs)
-	return bs
-}
-
 func (bot *Bot) WriteCode(code int) error {
-	bs := codeToBytes(code)
-	fmt.Printf("Sending %v to %s\n", bs, bot.SerialPort)
-	fi, err := os.OpenFile(bot.SerialPort, os.O_WRONLY, os.ModeDevice)
-	if err != nil {
-		return err
-	}
-	time.Sleep(500 * time.Millisecond)
-	_, err2 := fi.Write(bs)
-	if err2 != nil {
-		return err2
-	}
-	time.Sleep(500 * time.Millisecond)
-	fi.Close()
-	return nil
+	fmt.Printf("Sending %v\n", code)
+	cmd := exec.Command("digi-rc-switch.py", strconv.Itoa(code))
+	stdout, err := cmd.Output()
+	fmt.Println(stdout)
+	fmt.Println(err)
+	return err
 }
 
 type Bot struct {
-	Name       string
-	Channels   []string
-	IrcConfig  IrcServerConfig
-	Con        *irc.Connection
-	SerialPort string
-	Commands   map[string]int
+	Name      string
+	Channels  []string
+	IrcConfig IrcServerConfig
+	Con       *irc.Connection
+	Commands  map[string]int
 }
 
 func (bot *Bot) Address() string {
@@ -152,11 +135,10 @@ func (c *IrcServerConfig) UnmarshalYAML(b []byte) error {
 }
 
 type Config struct {
-	SerialPort string          `yaml:"serialport"`
-	IrcServer  IrcServerConfig `yaml:"ircserver"`
-	Nick       string          `yaml:"nick"`
-	Channels   []string        `yaml:"channels"`
-	Commands   map[string]int  `yaml:"commands"`
+	IrcServer IrcServerConfig `yaml:"ircserver"`
+	Nick      string          `yaml:"nick"`
+	Channels  []string        `yaml:"channels"`
+	Commands  map[string]int  `yaml:"commands"`
 }
 
 func (c *Config) Parse(data []byte) error {

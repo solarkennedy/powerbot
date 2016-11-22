@@ -22,3 +22,7 @@ powerbot | Sent out code 95491 for christmas
    @kyle | powerbot: code 1234
 powerbot | Sent out code 1234
 ```
+
+## TODO
+
+- [ ] Multi-channel support

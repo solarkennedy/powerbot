@@ -1,6 +1,4 @@
 ---
-serialport: '/dev/ttyACM0'
-
 ircserver:
   hostname: "localhost"
   port: 6667
