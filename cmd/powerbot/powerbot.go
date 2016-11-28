@@ -20,10 +20,9 @@ func main() {
 	}
 	fmt.Printf("%+v", config)
 	bot := powerbot.Bot{
-		Name:       config.Nick,
-		Channels:   config.Channels,
-		IrcConfig:  config.IrcServer,
-		SerialPort: config.SerialPort,
-		Commands:   config.Commands}
+		Name:      config.Nick,
+		Channels:  config.Channels,
+		IrcConfig: config.IrcServer,
+		Commands:  config.Commands}
 	bot.Run()
 }

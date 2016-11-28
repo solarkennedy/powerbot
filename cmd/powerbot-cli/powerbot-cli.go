@@ -22,11 +22,10 @@ func main() {
 	}
 	fmt.Printf("DEBUG: Config:: %+v", config)
 	bot := powerbot.Bot{
-		Name:       config.Nick,
-		Channels:   config.Channels,
-		IrcConfig:  config.IrcServer,
-		SerialPort: config.SerialPort,
-		Commands:   config.Commands}
+		Name:      config.Nick,
+		Channels:  config.Channels,
+		IrcConfig: config.IrcServer,
+		Commands:  config.Commands}
 	arg := os.Args[1]
 	fmt.Printf("Executing CLI commadnd out of %+v", arg)
 	code, err := strconv.Atoi(arg)
