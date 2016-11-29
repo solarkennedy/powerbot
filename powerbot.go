@@ -25,7 +25,7 @@ type Bot struct {
 	Channels  []string
 	IrcConfig IrcServerConfig
 	Con       *irc.Connection
-	Commands  map[string]int
+	Commands  map[string][]int
 }
 
 func (bot *Bot) Address() string {
@@ -65,13 +65,19 @@ func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
 			bot.Con.Privmsg(channel, reply)
 			return
 		}
-	} else if code, ok := bot.Commands[command+" "+argument]; ok {
-		write_err := bot.WriteCode(code)
-		var reply string
-		if write_err == nil {
-			reply = fmt.Sprintf("Sent out code %v for %v", code, command)
-		} else {
-			reply = fmt.Sprintf("Error writing to device: %v", write_err)
+	} else if codes, ok := bot.Commands[command+" "+argument]; ok {
+		successful_codes := []int{}
+		failed_codes := map[int]error{}
+		for _, code := range codes {
+			if write_err := bot.WriteCode(code); write_err != nil {
+				successful_codes = append(successful_codes, code)
+			} else {
+				failed_codes[code] = write_err
+			}
+		}
+		reply := fmt.Sprintf("Sent out codes %v for %v.", successful_codes, command)
+		for code, write_err := range failed_codes {
+			reply += fmt.Sprintf(" Error writing %v to device: %v.", code, write_err)
 		}
 		bot.Con.Privmsg(channel, reply)
 		return
@@ -134,10 +140,10 @@ func (c *IrcServerConfig) UnmarshalYAML(b []byte) error {
 }
 
 type Config struct {
-	IrcServer IrcServerConfig `yaml:"ircserver"`
-	Nick      string          `yaml:"nick"`
-	Channels  []string        `yaml:"channels"`
-	Commands  map[string]int  `yaml:"commands"`
+	IrcServer IrcServerConfig   `yaml:"ircserver"`
+	Nick      string            `yaml:"nick"`
+	Channels  []string          `yaml:"channels"`
+	Commands  map[string][]int  `yaml:"commands"`
 }
 
 func (c *Config) Parse(data []byte) error {

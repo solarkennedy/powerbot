@@ -11,5 +11,5 @@ channels:
  - "#test2"
 
 commands:
-  "christmas on": 5330371
-  "christmas off": 5330380
+  "christmas on": [5330371, 5330372]
+  "christmas off": [5330380]
