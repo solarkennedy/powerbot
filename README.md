@@ -23,6 +23,12 @@ powerbot | Sent out code 95491 for christmas
 powerbot | Sent out code 1234
 ```
 
+## Compatible devices
+
+The following devices are known to be controllable with this code:
+
+- [Etekcity Wireless Remote Control Electrical Outlet Switch for Household Appliances](http://www.etekcity.com/product/100068.html), receiver model BH9938U
+
 ## TODO
 
 - [ ] Multi-channel support
