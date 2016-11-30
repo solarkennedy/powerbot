@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (bot *Bot) WriteCode(code int) error {
@@ -74,6 +75,7 @@ func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
 			} else {
 				failed_codes[code] = write_err
 			}
+			time.Sleep(time.Second)
 		}
 		reply := fmt.Sprintf("Sent out codes %v for %v.", successful_codes, command)
 		for code, write_err := range failed_codes {
