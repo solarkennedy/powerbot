@@ -70,7 +70,7 @@ func (bot *Bot) ParseAndReply(channel string, msg string, user string) {
 		successful_codes := []int{}
 		failed_codes := map[int]error{}
 		for _, code := range codes {
-			if write_err := bot.WriteCode(code); write_err != nil {
+			if write_err := bot.WriteCode(code); write_err == nil {
 				successful_codes = append(successful_codes, code)
 			} else {
 				failed_codes[code] = write_err
